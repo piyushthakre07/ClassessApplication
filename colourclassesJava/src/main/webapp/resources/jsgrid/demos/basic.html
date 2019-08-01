@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>jsGrid - Basic Scenario</title>
+    <link rel="stylesheet" type="text/css" href="demos.css" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600,400' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="../css/jsgrid.css" />
+    <link rel="stylesheet" type="text/css" href="../css/theme.css" />
+
+    <script src="../external/jquery/jquery-1.8.3.js"></script>
+    <script src="db.js"></script>
+
+    <script src="../src/jsgrid.core.js"></script>
+    <script src="../src/jsgrid.load-indicator.js"></script>
+    <script src="../src/jsgrid.load-strategies.js"></script>
+    <script src="../src/jsgrid.sort-strategies.js"></script>
+    <script src="../src/jsgrid.field.js"></script>
+    <script src="../src/fields/jsgrid.field.text.js"></script>
+    <script src="../src/fields/jsgrid.field.number.js"></script>
+    <script src="../src/fields/jsgrid.field.select.js"></script>
+    <script src="../src/fields/jsgrid.field.checkbox.js"></script>
+    <script src="../src/fields/jsgrid.field.control.js"></script>
+</head>
+<body>
+    <h1> Price Glider</h1>
+    <div id="jsGrid"></div>
+
+    <script>
+    var datas;
+        $(function() {
+
+            $("#jsGrid").jsGrid({
+                height: "70%",
+                width: "100%",
+                filtering: true,
+                editing: true,
+                inserting: true,
+                sorting: true,
+                paging: true,
+                autoload: true,
+                pageSize: 8,
+                pageButtonCount: 5,
+                deleteConfirm: "Do you really want to delete the client?",
+                controller:{
+    			
+    				loadData: function(items) {
+    				    var d = $.Deferred();
+
+    				    // server-side filtering
+    				    $.ajax({
+    				        type: "GET",
+    				        url: "/IndiaEpod/client/allClient",
+    				        data: items,
+    				        dataType: "json"
+    				    }).done(function(result) {
+    				        // client-side filtering
+    				        
+    				        //item.SomeField === filter.SomeField
+    				        result = $.grep(result, function(filter) {
+    				             return (!items.name || filter.Name.indexOf(items.name) > -1)
+ 			                    && (items.age === undefined || filter.age === items.age)
+			                    && (!items.address || filter.address.indexOf(items.address) > -1)
+			                    && (!items.country || filter.country === items.country)
+			                    && (items.married === undefined || filter.married === items.married);
+    				        });
+							datas =result;
+    				        d.resolve(result);
+    				    })
+
+    				    return d.promise();
+    				},
+    				 insertItem: function (item) {
+    	                    return $.ajax({
+    	                        type: "POST",
+    	                        dataType : 'json',
+    	                        url: "/IndiaEpod/client//insertClient",
+    	                        data: item
+    	                    });
+    	                },
+    	                
+    	                deleteItem: function (item) {
+    	                    return $.ajax({
+    	                        type: "POST",
+    	                        url: "/IndiaEpod/client/deleteClient",
+    	                        data: item
+    	                    });
+    	                },
+    	                updateItem: function (item) {
+    	                    return $.ajax({
+    	                        type: "POST",
+    	                        url: "/IndiaEpod/client/updateClient",
+    	                        data: item
+    	                    });
+    	                },
+    			},
+                fields: [
+					{ name: "id", type: "number", width: 150   },
+                    { name: "name", type: "text", width: 150 },
+                    { name: "age", type: "number", width: 50 },
+                    { name: "address", type: "text", width: 200 } ,
+                    { name: "married", type: "checkbox", title: "Is Married", sorting: false },
+                    { name: "country", type: "select", items: db.countries, valueField: "Id", textField: "Name" },
+                    { type: "control" }
+                ]
+            });
+
+        });
+        
+        
+        
+        function getExport(){
+        	console.log(datas);
+        	jQuery.ajax({
+                url:"/IndiaEpod/client/download",
+                type: "POST",
+                data: JSON.stringify(datas), 
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(result) {
+                	console.log("sas",result);
+       	     //Write your code here
+                }
+      });
+        	/* $.ajax({
+                 type: "POST",
+                 url: "/IndiaEpod/client/download",
+                 data: datas
+             }); */
+        }
+        //Export
+        
+        
+        
+        /*  $(document).ready(function () {
+           // var theme = getTheme();
+            // prepare the data
+            
+            var source =
+            {
+                localdata: data,
+                datatype: "array",
+                updaterow: function (rowid, rowdata) {
+                    // synchronize with the server - send update command   
+                }
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            var addfilter = function () {
+                var filtergroup = new $.jqx.filter();
+                var filter_or_operator = 1;
+                var filtervalue = 'Beate';
+                var filtercondition = 'contains';
+                var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+                filtervalue = 'Andrew';
+                filtercondition = 'starts_with';
+                var filter2 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+                filtergroup.addfilter(filter_or_operator, filter1);
+                filtergroup.addfilter(filter_or_operator, filter2);
+                // add the filters.
+                $("#jsGrid").jqxGrid('addfilter', 'firstname', filtergroup);
+                // apply the filters.
+                $("#jsGrid").jqxGrid('applyfilters');
+            }
+            // initialize jqxGrid
+            $("#jsGrid").jqxGrid(
+            {
+                width: 670,
+                source: dataAdapter,
+                theme: theme,
+                altrows: true,
+                ready: function () {
+                    addfilter();
+                },
+                filterable: true,
+                sortable: true,
+                selectionmode: 'multiplecellsextended',
+                columns:
+                	[
+ 					{ text: "id", datafield: "id", width: 150   },
+                     { text: "name", datafield: "name", width: 150 },
+                     { text: "age", datafield: "age", width: 50 },
+                     { text: "address", datafield: "address", width: 200 } ,
+                     { text: "married", datafield: "married",width:20},
+                     { text: "country", datafield: "country",width:20 },
+                     
+                 ] 
+            });
+            $("#excelExport").jqxButton({ theme: theme });
+            $("#xmlExport").jqxButton({ theme: theme });
+            $("#csvExport").jqxButton({ theme: theme });
+            $("#tsvExport").jqxButton({ theme: theme });
+            $("#htmlExport").jqxButton({ theme: theme });
+            $("#jsonExport").jqxButton({ theme: theme });
+            $("#excelExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'xls', 'jqxGrid');
+            });
+            $("#xmlExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'xml', 'jqxGrid');
+            });
+            $("#csvExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'csv', 'jqxGrid');
+            });
+            $("#tsvExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'tsv', 'jqxGrid');
+            });
+            $("#htmlExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'html', 'jqxGrid');
+            });
+            $("#jsonExport").click(function () {
+                $("#jqxgrid").jqxGrid('exportdata', 'json', 'jqxGrid');
+            });
+        }); */
+        
+        
+    </script>
+      <div style='margin-left: 10px; float: left;'>
+                <input type="button" value="Export to CSV" id='csvExport' onclick="getExport()" />
+                
+            </div>
+            <br /> 
+         <form method="post" action="/IndiaEpod/client/uploadClient" enctype="multipart/form-data">
+            <table border="0">
+                <tr>
+                    <td>upload Client File :</td>
+                    <td><input type="file" name="file" size="50" /></td>
+                </tr>
+                
+                <tr>
+                    <td colspan="2" align="center"><input type="submit" value="Upload" /></td>
+                </tr>
+            </table>
+        </form>
+</body>
+</html>
