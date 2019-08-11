@@ -75,7 +75,7 @@ registry.addResourceHandler("/resources/**").addResourceLocations("/resources/")
         properties.put("hibernate.show_sql", environment.getRequiredProperty("hibernate.show_sql"));
         properties.put("hibernate.format_sql", environment.getRequiredProperty("hibernate.format_sql"));
         properties.put("hibernate.connection.release_mode", "after_transaction");
-     /*   properties.put("hibernate.hbm2ddl.auto", "create");*/
+        properties.put("hibernate.hbm2ddl.auto", "create");
         
         return properties;        
     }

@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.colour.beans.CountryBean;
+import com.colour.beans.StateBean;
 import com.colour.model.CountryMaster;
+import com.colour.model.StateMaster;
 import com.colour.module.master.dao.ICountryDao;
 import com.colour.module.master.service.ICountryService;
 
@@ -28,7 +30,19 @@ public class CountryServiceImpl implements ICountryService {
 				countryBean.setCountryId(countryMaster.getCountryId());
 				countryBean.setActive(countryMaster.getActive());
 				countryBean.setIsdefault(countryMaster.getIsdefault());
+				ArrayList<StateBean> stateBeanList=new ArrayList<StateBean>();
+				if(countryMaster.getStateMasterList()!=null){
+				for(StateMaster stateMaster:countryMaster.getStateMasterList()){
+					StateBean stateBean=new StateBean();
+					stateBean.setStateId(stateMaster.getStateId());
+					stateBean.setStateName(stateMaster.getStateName());
+					stateBeanList.add(stateBean);
+				}
+				countryBean.setStateBeanList(stateBeanList);
+				}
 				countryBeanList.add(countryBean);
+				
+				
 			}
 
 		} catch (Exception e) {
